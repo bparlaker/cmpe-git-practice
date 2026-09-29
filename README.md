@@ -12,10 +12,9 @@ Hi! I'm **Berker Parlaker**.
 
 | | |
 |---|---|
-| **Program / Year** | _[your department & year]_ |
-| **Interests** | _[your interests]_ |
-| **Currently learning** | Git, GitHub workflows, collaborative development |
-| **Fun fact** | _[something about you]_ |
+| **Program / Year** | SWE / 2 |
+| **Interests** | Sports |
+| **Currently learning** | Git, GitHub workflows |
 
 This repository is where I practise the Git and GitHub workflow we discussed in class: version control, issues, labels and documentation.
 
