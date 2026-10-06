@@ -32,6 +32,23 @@ This repository is where I practise the Git and GitHub workflow we discussed in 
 
 ---
 
+## 🎨 Term Project: Local Art Archive
+
+A website for sharing and discovering **local and traditional art** — ebru, çini, kilim, miniature painting, works of local artists — with photos, locations, tags, search, a map and comments.
+
+**Status:** planning (Milestone 1 of 4)
+
+| | |
+|---|---|
+| What & why | [Project Overview](https://github.com/bparlaker/cmpe-git-practice/wiki/Project-Overview) |
+| What it must do | [Requirements](https://github.com/bparlaker/cmpe-git-practice/wiki/Requirements) |
+| Tools, time, milestones, risks | [Resources and Plan](https://github.com/bparlaker/cmpe-git-practice/wiki/Resources-and-Plan) |
+| Work items | [Milestones](https://github.com/bparlaker/cmpe-git-practice/milestones) · [Issues](https://github.com/bparlaker/cmpe-git-practice/issues) |
+
+**Planned stack:** Python · Django · PostgreSQL · Bootstrap · Leaflet/OpenStreetMap · Docker · Render
+
+---
+
 ## 🌱 Why Git?
 
 Git is a **distributed version control system**. Every clone is a full copy of the project history, so you can:
