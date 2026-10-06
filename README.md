@@ -34,9 +34,9 @@ This repository is where I practise the Git and GitHub workflow we discussed in 
 
 ## 🎨 Term Project: Local Art Archive
 
-A website for sharing and discovering **local and traditional art** — ebru, çini, kilim, miniature painting, works of local artists — with photos, locations, tags, search, a map and comments.
+A website for sharing and discovering **local and traditional art** - ebru, çini, kilim, miniature painting, works of local artists - with photos, locations, tags, search, a map and comments.
 
-**Status:** planning (Milestone 1 of 4)
+**Status:** planning (Milestone 1 of 2)
 
 | | |
 |---|---|
@@ -142,7 +142,7 @@ Example output of `git log --oneline --graph`:
 
 > ⚠️ Never `reset --hard` or force-push a branch other people are using. Prefer `git revert` on shared branches.
 
-### 7. Stash — park work in progress
+### 7. Stash - park work in progress
 
 ```bash
 git stash push -m "half-done README table"
@@ -188,7 +188,7 @@ Types used: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`.
 
 ## 🏷 Labels at a Glance
 
-Labels are grouped by prefix and colour family — see the [Issue Labels](https://github.com/bparlaker/cmpe-git-practice/wiki/Issue-Labels) wiki page for the full reasoning.
+Labels are grouped by prefix and colour family - see the [Issue Labels](https://github.com/bparlaker/cmpe-git-practice/wiki/Issue-Labels) wiki page for the full reasoning.
 
 | Group | Question it answers | Examples |
 |---|---|---|
@@ -204,5 +204,5 @@ Labels are grouped by prefix and colour family — see the [Issue Labels](https:
 
 - *Pro Git* book (free): https://git-scm.com/book
 - Git reference docs: https://git-scm.com/docs
-- GitHub Docs – Managing labels: https://docs.github.com/en/issues/using-labels-and-milestones-to-track-work/managing-labels
+- GitHub Docs - Managing labels: https://docs.github.com/en/issues/using-labels-and-milestones-to-track-work/managing-labels
 - Conventional Commits: https://www.conventionalcommits.org/
