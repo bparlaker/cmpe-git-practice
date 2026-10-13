@@ -34,18 +34,19 @@ This repository is where I practise the Git and GitHub workflow we discussed in 
 
 ## 🎨 Term Project: Local Art Archive
 
-A website for sharing and discovering **local and traditional art** - ebru, çini, kilim, miniature painting, works of local artists - with photos, locations, tags, search, a map and comments.
+A website for sharing and discovering **local and traditional art** (kilim, ebru, çini, miniature painting, works of local artists). Every craft entry is saved as **structured data**: the craft type decides the fields (sizes with units, colors, patterns, materials, a map pin). The only free text is the personal story.
 
-**Status:** planning (Milestone 1 of 2)
+**Status:** Milestone 1 (requirements, use cases, mockups) due 13 Oct. Next: **initial prototype on 20 Oct**.
 
-| | |
-|---|---|
-| What & why | [Project Overview](https://github.com/bparlaker/cmpe-git-practice/wiki/Project-Overview) |
-| What it must do | [Requirements](https://github.com/bparlaker/cmpe-git-practice/wiki/Requirements) |
-| Tools, time, milestones, risks | [Resources and Plan](https://github.com/bparlaker/cmpe-git-practice/wiki/Resources-and-Plan) |
-| Work items | [Milestones](https://github.com/bparlaker/cmpe-git-practice/milestones) · [Issues](https://github.com/bparlaker/cmpe-git-practice/issues) |
+- **What and why:** [Project Overview](https://github.com/bparlaker/cmpe-git-practice/wiki/Project-Overview)
+- **What it must do:** [Requirements](https://github.com/bparlaker/cmpe-git-practice/wiki/Requirements), with requirement validation
+- **Data model:** [Domain Model](https://github.com/bparlaker/cmpe-git-practice/wiki/Domain-Model), with the Kilim example
+- **How people use it:** [Use Cases](https://github.com/bparlaker/cmpe-git-practice/wiki/Use-Cases), with diagrams and user stories
+- **Screens:** [Mockups](https://github.com/bparlaker/cmpe-git-practice/wiki/Mockups)
+- **Tools, time, milestones, risks:** [Resources and Plan](https://github.com/bparlaker/cmpe-git-practice/wiki/Resources-and-Plan)
+- **Work items:** [Milestones](https://github.com/bparlaker/cmpe-git-practice/milestones) and [Issues](https://github.com/bparlaker/cmpe-git-practice/issues)
 
-**Planned stack:** Python · Django · PostgreSQL · Bootstrap · Leaflet/OpenStreetMap · Docker · Render
+**Planned stack:** Python, Django, PostgreSQL, Bootstrap, Leaflet/OpenStreetMap, Docker, Render
 
 ---
 
