@@ -8,6 +8,7 @@ from .models import (
     CraftEntry,
     CraftType,
     EntryImage,
+    Report,
     Tag,
 )
 
@@ -43,11 +44,23 @@ class EntryImageInline(admin.TabularInline):
 
 @admin.register(CraftEntry)
 class CraftEntryAdmin(admin.ModelAdmin):
-    list_display = ["title", "craft_type", "owner", "place_name", "created_at"]
-    list_filter = ["craft_type"]
+    list_display = ["title", "craft_type", "owner", "place_name", "is_hidden", "created_at"]
+    list_filter = ["craft_type", "is_hidden"]
     search_fields = ["title", "place_name"]
     inlines = [AttributeValueInline, EntryImageInline]
 
 
 admin.site.register(Color)
 admin.site.register(Tag)
+
+
+@admin.register(Report)
+class ReportAdmin(admin.ModelAdmin):
+    list_display = ["__str__", "reporter", "status", "admin_action", "created_at"]
+    list_filter = ["status", "reason"]
+    actions = ["mark_resolved"]
+
+    # A shortcut in the admin list: select reports and mark them resolved.
+    @admin.action(description="Mark selected reports as resolved")
+    def mark_resolved(self, request, queryset):
+        queryset.update(status=Report.RESOLVED, admin_action="dismiss")

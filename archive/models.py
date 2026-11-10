@@ -147,6 +147,9 @@ class CraftEntry(models.Model):
     # The only free text field (FR-3.6).
     personal_story = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    # The admin can hide an entry after a report (FR-7.3). Hidden entries are
+    # not shown in lists, search or on the map.
+    is_hidden = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-created_at"]
@@ -157,6 +160,29 @@ class CraftEntry(models.Model):
 
     def get_absolute_url(self):
         return reverse("entry_detail", args=[self.pk])
+
+    def to_dict(self):
+        """
+        The entry as plain data for the JSON export (NFR-8). Everything except
+        the personal story is structured, so another program can read it.
+        """
+        return {
+            "id": self.pk,
+            "title": self.title,
+            "craft_type": self.craft_type.name,
+            "category": str(self.craft_type.category),
+            "owner": self.owner.username,
+            "place": {
+                "name": self.place_name,
+                "latitude": self.latitude,
+                "longitude": self.longitude,
+            },
+            "attributes": {v.definition.name: v.export_value() for v in self.values_in_order()},
+            "colors": [c.name for c in self.colors.all()],
+            "tags": [t.name for t in self.tags.all()],
+            "personal_story": self.personal_story,
+            "created_at": self.created_at.isoformat(),
+        }
 
     def values_in_order(self):
         # The values sorted the same way as the fields of the craft type.
@@ -235,3 +261,60 @@ class AttributeValue(models.Model):
 
     def multiple_values(self):
         return [v for v in self.text.split("|") if v]
+
+    def export_value(self):
+        """The value for the JSON export. Measurements keep their base unit."""
+        d = self.definition
+        if d.data_type == AttributeDefinition.MEASUREMENT:
+            base_unit = "cm" if d.unit in ("mm", "cm", "m") else "g"
+            return {"value": self.number, "unit": base_unit}
+        if d.data_type == AttributeDefinition.MULTIPLE:
+            return self.multiple_values()
+        return self.text
+
+
+class Report(models.Model):
+    """
+    A report about wrong or meaningless data (FR-7.1, FR-7.2).
+
+    Only the admin sees reports. A report never changes the content by
+    itself, the admin decides what to do.
+    A report is about exactly one thing: an entry, a craft type or a tag.
+    """
+
+    REASONS = [
+        ("wrong_value", "A value is wrong (for example an impossible size)"),
+        ("meaningless", "Meaningless or nonsense data"),
+        ("duplicate", "Duplicate of another entry or type"),
+        ("wrong_type", "Wrong craft type or category"),
+        ("inappropriate", "Inappropriate content"),
+    ]
+    OPEN = "open"
+    RESOLVED = "resolved"
+    STATUSES = [(OPEN, "Open"), (RESOLVED, "Resolved")]
+
+    reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    entry = models.ForeignKey(CraftEntry, null=True, blank=True, on_delete=models.CASCADE)
+    craft_type = models.ForeignKey(CraftType, null=True, blank=True, on_delete=models.CASCADE)
+    tag = models.ForeignKey(Tag, null=True, blank=True, on_delete=models.CASCADE)
+    reason = models.CharField(max_length=20, choices=REASONS)
+    status = models.CharField(max_length=10, choices=STATUSES, default=OPEN)
+    # What the admin did, for example "hidden" or "dismissed".
+    admin_action = models.CharField(max_length=30, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"Report on {self.target()} ({self.get_reason_display()})"
+
+    def target(self):
+        return self.entry or self.craft_type or self.tag
+
+    def target_kind(self):
+        if self.entry_id:
+            return "entry"
+        if self.craft_type_id:
+            return "craft type"
+        return "tag"
