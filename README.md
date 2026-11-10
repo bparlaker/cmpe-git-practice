@@ -36,7 +36,7 @@ This repository is where I practise the Git and GitHub workflow we discussed in 
 
 A website for sharing and discovering **local and traditional art** (kilim, ebru, çini, miniature painting, works of local artists). Every craft entry is saved as **structured data**: the craft type decides the fields (sizes with units, colors, patterns, materials, a map pin). The only free text is the personal story.
 
-**Status:** Milestone 1 (requirements, use cases, mockups) due 13 Oct. Next: **initial prototype on 20 Oct**.
+**Status:** the MVP is done. Users can sign up, add a kilim (or ebru, çini, miniature) with units, colors, patterns and a map pin, define new craft types, use tag suggestions, browse, search and filter, report wrong data to the admin, see all entries on a map and export them as JSON. Next: the site on Render and the final release (comments, user manual, demo).
 
 - **What and why:** [Project Overview](https://github.com/bparlaker/cmpe-git-practice/wiki/Project-Overview)
 - **What it must do:** [Requirements](https://github.com/bparlaker/cmpe-git-practice/wiki/Requirements), with requirement validation
@@ -46,7 +46,40 @@ A website for sharing and discovering **local and traditional art** (kilim, ebru
 - **Tools, time, milestones, risks:** [Resources and Plan](https://github.com/bparlaker/cmpe-git-practice/wiki/Resources-and-Plan)
 - **Work items:** [Milestones](https://github.com/bparlaker/cmpe-git-practice/milestones) and [Issues](https://github.com/bparlaker/cmpe-git-practice/issues)
 
-**Planned stack:** Python, Django, PostgreSQL, Bootstrap, Leaflet/OpenStreetMap, Docker, Render
+**Stack:** Python, Django, PostgreSQL (SQLite on my laptop), Bootstrap, Leaflet/OpenStreetMap, Docker, Render
+
+### Run the project
+
+With Python 3.12 on your computer:
+
+```bash
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py load_initial_data   # categories, colors, tags and 4 craft types (Kilim, Ebru, Çini, Miniature)
+python manage.py createsuperuser     # an admin account, needed for the report queue
+python manage.py runserver
+```
+
+Then open http://127.0.0.1:8000
+
+With Docker (app + PostgreSQL):
+
+```bash
+docker compose up --build
+```
+
+Run the tests:
+
+```bash
+python manage.py test
+```
+
+### Where the code is
+
+- `localart/`: project settings and main URLs
+- `archive/`: my app (models, forms, views, tests, the `load_initial_data` command)
+- `templates/` and `static/`: the pages, CSS and JavaScript (map, tag suggestions)
+- `render.yaml` and `build.sh`: deploy on Render
 
 ---
 
