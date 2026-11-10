@@ -1,0 +1,34 @@
+# Runs my app and a PostgreSQL database together:
+#   docker compose up --build
+# Then open http://localhost:8000
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: localart
+      POSTGRES_USER: localart
+      POSTGRES_PASSWORD: localart
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    # The web app should wait until the database really accepts connections.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U localart"]
+      interval: 3s
+      retries: 10
+
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgres://localart:localart@db:5432/localart
+      DEBUG: "True"
+    volumes:
+      # Uploaded photos stay on my computer even if the container is removed.
+      - ./media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:

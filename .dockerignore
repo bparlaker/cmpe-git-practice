@@ -1,0 +1,8 @@
+# Files Docker does not need to copy into the image.
+.git
+db.sqlite3
+media/
+staticfiles/
+__pycache__/
+*.pyc
+docs/
