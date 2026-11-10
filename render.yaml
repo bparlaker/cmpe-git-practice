@@ -1,0 +1,28 @@
+# My Render "blueprint". Render reads this file and creates a free web
+# service and a free PostgreSQL database for the project (NFR-1).
+databases:
+  - name: localart-db
+    plan: free
+    databaseName: localart
+    user: localart
+
+services:
+  - type: web
+    name: local-art-archive
+    runtime: python
+    plan: free
+    # I call it with bash, so it works even if the file is not marked as executable.
+    buildCommand: "bash build.sh"
+    startCommand: "gunicorn localart.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: localart-db
+          property: connectionString
+      # Render makes a random secret key for me.
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
