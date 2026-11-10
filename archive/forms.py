@@ -3,7 +3,8 @@ from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import AttributeDefinition, Color
+from .models import AttributeDefinition, Category, Color, CraftType, Report, Tag
+from .similar import same_name_exists, similar_names
 from .units import to_base, from_base, units_like
 
 
@@ -14,7 +15,10 @@ def add_bootstrap_classes(form):
     """
     for field in form.fields.values():
         widget = field.widget
-        if isinstance(widget, (forms.CheckboxSelectMultiple, forms.HiddenInput)):
+        if isinstance(widget, (forms.CheckboxSelectMultiple, forms.HiddenInput, forms.RadioSelect)):
+            continue
+        if isinstance(widget, forms.CheckboxInput):
+            widget.attrs["class"] = "form-check-input"
             continue
         if isinstance(widget, forms.Select):
             widget.attrs["class"] = "form-select"
@@ -86,6 +90,11 @@ class EntryForm(forms.Form):
     tags = forms.CharField(
         required=False,
         help_text="Separate tags with commas, for example: kayseri, dowry",
+    )
+    # Only needed when a new tag looks like a typo of an existing tag.
+    confirm_new_tags = forms.BooleanField(
+        required=False,
+        label="Yes, I really want to create these new tags",
     )
     images = MultipleImageField(required=False)
     personal_story = forms.CharField(
@@ -188,15 +197,34 @@ class EntryForm(forms.Form):
                 raise forms.ValidationError(f"{img.name} is not a JPG or PNG file.")
         return images
 
-    def clean_tags(self):
+    def clean(self):
+        cleaned = super().clean()
         # "Kayseri, dowry ,," -> ["kayseri", "dowry"]
-        raw = self.cleaned_data.get("tags", "")
         names = []
-        for part in raw.split(","):
+        for part in cleaned.get("tags", "").split(","):
             name = part.strip().lower()
             if name and name not in names:
                 names.append(name)
-        return names
+
+        # FR-4.3: if a new tag is almost the same as an existing one, it is
+        # probably a typo, so I ask "Did you mean ...?" before creating it.
+        existing = list(Tag.objects.values_list("name", flat=True))
+        hints = []
+        for name in names:
+            if name in existing:
+                continue
+            close = similar_names(name, existing, max_distance=2)
+            if close:
+                hints.append(f'"{name}": did you mean "{close[0]}"?')
+        if hints and not cleaned.get("confirm_new_tags"):
+            self.add_error(
+                "tags",
+                "Some tags look like existing ones. "
+                + " ".join(hints)
+                + " Fix the tag, or tick the box below to create it anyway.",
+            )
+        cleaned["tags"] = names
+        return cleaned
 
     def attribute_fields(self):
         """
@@ -229,3 +257,139 @@ class EntryForm(forms.Form):
             else:
                 result.append((d, None, value))
         return result
+
+
+class CraftTypeForm(forms.ModelForm):
+    """
+    A user defines a new craft type (FR-2.3). The fields of the type are
+    added below it with AttributeFormSet.
+    """
+
+    confirm_new_name = forms.BooleanField(
+        required=False,
+        label="This is really a new craft type, not one of the suggested ones",
+    )
+
+    class Meta:
+        model = CraftType
+        fields = ["name", "category", "description"]
+        labels = {"category": "Family (level 2)"}
+        widgets = {"description": forms.Textarea(attrs={"rows": 3})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # A craft type can only hang under a family (level 2), not a domain.
+        self.fields["category"].queryset = Category.objects.exclude(parent=None)
+        add_bootstrap_classes(self)
+
+    def clean(self):
+        cleaned = super().clean()
+        name = cleaned.get("name", "")
+        existing = list(CraftType.objects.values_list("name", flat=True))
+        if name and same_name_exists(name, existing):
+            self.add_error("name", "This craft type already exists.")
+        elif name:
+            # FR-2.5: similar names (max 2 letters different) are suggested.
+            close = similar_names(name, existing)
+            if close and not cleaned.get("confirm_new_name"):
+                self.add_error(
+                    "name",
+                    "Similar types already exist: " + ", ".join(close)
+                    + ". Use one of them, or tick the box below if yours is really new.",
+                )
+        return cleaned
+
+
+class AttributeDefinitionForm(forms.ModelForm):
+    class Meta:
+        model = AttributeDefinition
+        fields = ["name", "data_type", "unit", "allowed_values", "required", "show_in_caption"]
+        widgets = {"allowed_values": forms.Textarea(attrs={"rows": 2})}
+        labels = {"show_in_caption": "Show under photo"}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        add_bootstrap_classes(self)
+
+    def clean(self):
+        cleaned = super().clean()
+        data_type = cleaned.get("data_type")
+        if data_type == AttributeDefinition.MEASUREMENT and not cleaned.get("unit"):
+            # UC-07 alternative flow 3a: a measurement needs a unit.
+            self.add_error("unit", "A measurement needs a unit.")
+        if data_type != AttributeDefinition.MEASUREMENT:
+            # A unit only makes sense for measurements, so I clear it.
+            cleaned["unit"] = ""
+        if data_type in (AttributeDefinition.SINGLE, AttributeDefinition.MULTIPLE):
+            if not cleaned.get("allowed_values", "").strip():
+                self.add_error("allowed_values", "Write the allowed values, one per line.")
+        return cleaned
+
+
+# A list of field forms under the craft type form. "extra=3" shows three
+# empty rows, and at least one field is required.
+AttributeFormSet = forms.inlineformset_factory(
+    CraftType,
+    AttributeDefinition,
+    form=AttributeDefinitionForm,
+    extra=3,
+    min_num=1,
+    validate_min=True,
+    can_delete=False,
+)
+
+
+class ReportForm(forms.Form):
+    """The user only picks a reason from a list (FR-7.1)."""
+
+    reason = forms.ChoiceField(choices=Report.REASONS, widget=forms.RadioSelect)
+
+
+class FilterForm(forms.Form):
+    """
+    Search and filter (FR-6.2, FR-6.3). When a craft type is chosen, I add a
+    filter for each of its fields: a min and max for measurements, and a
+    list for choices.
+    """
+
+    q = forms.CharField(required=False, label="Keyword")
+    craft_type = forms.ModelChoiceField(
+        queryset=CraftType.objects.all(), required=False, empty_label="All craft types"
+    )
+    color = forms.ModelChoiceField(queryset=Color.objects.all(), required=False, empty_label="Any color")
+    tag = forms.CharField(required=False, widget=forms.HiddenInput)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.attribute_filters = []
+        craft_type = None
+        if self.is_bound and self.data.get("craft_type"):
+            craft_type = CraftType.objects.filter(pk=self.data.get("craft_type")).first()
+
+        if craft_type:
+            for d in craft_type.attributes.all():
+                if d.data_type == AttributeDefinition.MEASUREMENT:
+                    self.fields[f"min_{d.id}"] = forms.FloatField(required=False, label=f"{d.name} from")
+                    self.fields[f"max_{d.id}"] = forms.FloatField(required=False, label="to")
+                    # The default unit of the field comes first in the list, so
+                    # it is the one selected when the user has not chosen yet.
+                    units = [d.unit] + [u for u in units_like(d.unit) if u != d.unit]
+                    self.fields[f"unit_{d.id}"] = forms.ChoiceField(
+                        choices=[(u, u) for u in units], required=False, label="unit"
+                    )
+                    self.attribute_filters.append((d, "measurement"))
+                elif d.data_type in (AttributeDefinition.SINGLE, AttributeDefinition.MULTIPLE):
+                    choices = [("", "Any")] + [(c, c) for c in d.choices_list()]
+                    self.fields[f"val_{d.id}"] = forms.ChoiceField(choices=choices, required=False, label=d.name)
+                    self.attribute_filters.append((d, "choice"))
+        add_bootstrap_classes(self)
+
+    def filter_rows(self):
+        """Ready to show rows for the template: (definition, kind, fields...)."""
+        rows = []
+        for d, kind in self.attribute_filters:
+            if kind == "measurement":
+                rows.append((d, kind, [self[f"min_{d.id}"], self[f"max_{d.id}"], self[f"unit_{d.id}"]]))
+            else:
+                rows.append((d, kind, [self[f"val_{d.id}"]]))
+        return rows
