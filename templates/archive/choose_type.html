@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Add an entry{% endblock %}
+{% block content %}
+<h1 class="h3">Add an entry</h1>
+<p class="text-muted">Step 1: choose the craft type. The form in step 2 shows only the fields of that type.</p>
+
+{# The tree: Domain (level 1) > Family (level 2) > Craft Type (level 3) #}
+{% for domain in domains %}
+  <h2 class="h5 mt-4">{{ domain.name }}</h2>
+  <div class="row">
+    {% for family in domain.children.all %}
+      <div class="col-md-4 mb-3">
+        <div class="border rounded p-3 h-100">
+          <div class="fw-semibold mb-2">{{ family.name }}</div>
+          {% for craft_type in family.craft_types.all %}
+            <a class="btn btn-outline-primary btn-sm mb-1" href="{% url 'add_entry' craft_type.id %}">{{ craft_type.name }}</a>
+          {% empty %}
+            <span class="small text-muted">No craft types yet</span>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endfor %}
+{% endblock %}

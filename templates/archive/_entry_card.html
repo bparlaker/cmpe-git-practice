@@ -1,0 +1,17 @@
+{# A small card for one entry. Used on the home page and in lists. #}
+<div class="col-sm-6 col-lg-4 mb-4">
+  <div class="card h-100">
+    {% with image=entry.images.first %}
+      {% if image %}
+        <img src="{{ image.image.url }}" class="card-img-top entry-thumb" alt="{{ entry.title }}">
+      {% else %}
+        <div class="entry-thumb no-photo">no photo</div>
+      {% endif %}
+    {% endwith %}
+    <div class="card-body">
+      <h2 class="h6 card-title"><a href="{{ entry.get_absolute_url }}">{{ entry.title }}</a></h2>
+      <p class="small text-muted mb-1">{{ entry.craft_type.name }}{% if entry.place_name %} · {{ entry.place_name }}{% endif %}</p>
+      <p class="small mb-0">{{ entry.caption }}</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}{{ entry.title }}{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+  <div>
+    <h1 class="h3 mb-1">{{ entry.title }}</h1>
+    {# Breadcrumb of the three levels: Domain > Family > Craft Type #}
+    <p class="small text-muted">{{ entry.craft_type.path }} · added by {{ entry.owner.username }}</p>
+  </div>
+  {% block entry_buttons %}{% endblock %}
+</div>
+
+<div class="row">
+  <div class="col-lg-7">
+    {% for image in entry.images.all %}
+      <figure class="figure w-100">
+        <img src="{{ image.image.url }}" class="figure-img img-fluid rounded" alt="{{ entry.title }}">
+        {# The caption with the key attributes (FR-3.7) #}
+        <figcaption class="figure-caption">{{ entry.caption }}</figcaption>
+      </figure>
+    {% empty %}
+      <div class="no-photo rounded mb-2">no photo yet</div>
+      <p class="small text-muted">{{ entry.caption }}</p>
+    {% endfor %}
+
+    {% if entry.personal_story %}
+      <h2 class="h5 mt-3">Personal story</h2>
+      <p>{{ entry.personal_story|linebreaksbr }}</p>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-5">
+    <h2 class="h5">Attributes</h2>
+    <table class="table table-sm">
+      {% for value in entry.values_in_order %}
+        <tr><th class="fw-normal text-muted">{{ value.definition.name }}</th><td>{{ value.display }}</td></tr>
+      {% endfor %}
+      {% if entry.colors.exists %}
+        <tr>
+          <th class="fw-normal text-muted">Colors</th>
+          <td>
+            {% for color in entry.colors.all %}
+              <span class="color-dot" style="background: {{ color.hex_code }}"></span>{{ color.name }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+          </td>
+        </tr>
+      {% endif %}
+    </table>
+
+    {% if entry.tags.exists %}
+      <h2 class="h6">Tags</h2>
+      <p>{% for tag in entry.tags.all %}<span class="badge text-bg-secondary me-1">{{ tag.name }}</span>{% endfor %}</p>
+    {% endif %}
+
+    <h2 class="h6">Production place{% if entry.place_name %}: {{ entry.place_name }}{% endif %}</h2>
+    {# The map reads the pin from these data attributes. #}
+    <div id="detail-map" class="map-box small-map"
+         data-lat="{{ entry.latitude|stringformat:'f' }}" data-lng="{{ entry.longitude|stringformat:'f' }}"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // A small read only map with one pin for this entry (FR-5.2).
+    const box = document.getElementById("detail-map");
+    const point = [parseFloat(box.dataset.lat), parseFloat(box.dataset.lng)];
+    const detailMap = L.map("detail-map").setView(point, 8);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(detailMap);
+    L.marker(point).addTo(detailMap);
+  </script>
+{% endblock %}

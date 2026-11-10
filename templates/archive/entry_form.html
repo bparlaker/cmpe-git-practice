@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{% if entry %}Edit{% else %}Add{% endif %} {{ craft_type.name }}{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+
+{% block content %}
+<p class="small text-muted mb-1">{{ craft_type.path }}</p>
+<h1 class="h3 mb-3">{% if entry %}Edit "{{ entry.title }}"{% else %}Add a {{ craft_type.name }}{% endif %}</h1>
+
+<form method="post" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
+  <div class="row">
+    <div class="col-lg-7">
+      {% include "archive/_field.html" with field=form.title %}
+
+      <h2 class="h5 mt-4">{{ craft_type.name }} fields</h2>
+      <p class="small text-muted">These fields come from the craft type. You cannot add your own fields here.</p>
+
+      {% for definition, field, unit_field in form.attribute_fields %}
+        {% if unit_field %}
+          {# A measurement: the number and its unit next to each other. #}
+          <div class="mb-3">
+            <label class="form-label" for="{{ field.id_for_label }}">
+              {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
+            </label>
+            <div class="input-group measurement">
+              {{ field }}
+              {{ unit_field }}
+            </div>
+            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+          </div>
+        {% elif definition.data_type == "multiple" %}
+          <div class="mb-3">
+            <div class="form-label">
+              {{ field.label }} <span class="small text-muted">(choose many)</span>
+              {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+            </div>
+            <div class="choice-list">{{ field }}</div>
+            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+          </div>
+        {% else %}
+          {% include "archive/_field.html" %}
+        {% endif %}
+      {% endfor %}
+
+      <div class="mb-3">
+        <div class="form-label">Colors <span class="small text-muted">(choose many)</span></div>
+        <div class="choice-list">{{ form.colors }}</div>
+      </div>
+
+      {% include "archive/_field.html" with field=form.tags %}
+      {% include "archive/_field.html" with field=form.images %}
+      {% include "archive/_field.html" with field=form.personal_story %}
+    </div>
+
+    <div class="col-lg-5">
+      <h2 class="h5">Production place <span class="text-danger">*</span></h2>
+      <p class="small text-muted">Click on the map to drop a pin, or search a place name.</p>
+      <div class="input-group mb-2">
+        <input type="text" id="place-search" class="form-control" placeholder="For example: Kayseri">
+        <button type="button" id="place-search-button" class="btn btn-outline-secondary">Search</button>
+      </div>
+      <div id="map" class="map-box"></div>
+      {% for error in form.latitude.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      {{ form.latitude }}{{ form.longitude }}
+      <div class="mt-2">{% include "archive/_field.html" with field=form.place_name %}</div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" type="submit">Save entry</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="{% static 'js/map_picker.js' %}"></script>
+{% endblock %}
