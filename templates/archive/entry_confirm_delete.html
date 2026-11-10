@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Delete {{ entry.title }}{% endblock %}
+{% block content %}
+<h1 class="h4">Delete "{{ entry.title }}"?</h1>
+<p>This cannot be undone. The photos and all values of this entry are deleted too.</p>
+<form method="post">
+  {% csrf_token %}
+  <button class="btn btn-danger" type="submit">Yes, delete it</button>
+  <a class="btn btn-link" href="{{ entry.get_absolute_url }}">Cancel</a>
+</form>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Report{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <h1 class="h4">Report this {{ kind }}: "{{ target }}"</h1>
+    <p class="text-muted">Your report goes only to the admin. It is not public and it does not change
+    anything by itself. The admin checks it and decides what to do.</p>
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <div class="form-label">What is wrong?</div>
+        {% for radio in form.reason %}
+          <div class="form-check">
+            {{ radio.tag }}
+            <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+          </div>
+        {% endfor %}
+        {% for error in form.reason.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+      <button class="btn btn-primary" type="submit">Send report</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

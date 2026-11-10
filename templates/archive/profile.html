@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ person.username }}{% endblock %}
+{% block content %}
+<h1 class="h3">{{ person.username }}</h1>
+<p class="text-muted">Member since {{ person.date_joined|date:"F Y" }}</p>
+
+<h2 class="h5 mt-4">Entries ({{ entries|length }})</h2>
+<div class="row">
+  {% for entry in entries %}
+    {% include "archive/_entry_card.html" %}
+  {% empty %}
+    <p>No entries yet.</p>
+  {% endfor %}
+</div>
+
+<h2 class="h5 mt-4">Craft types defined</h2>
+<ul>
+  {% for craft_type in craft_types %}
+    <li><a href="{% url 'entry_list' %}?craft_type={{ craft_type.id }}">{{ craft_type.name }}</a> ({{ craft_type.category }})</li>
+  {% empty %}
+    <li class="text-muted">None</li>
+  {% endfor %}
+</ul>
+{% endblock %}

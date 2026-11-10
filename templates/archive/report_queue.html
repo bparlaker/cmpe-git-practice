@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<h1 class="h3">Open reports</h1>
+<p class="text-muted">Only the admin sees this page. Oldest reports are on top.</p>
+
+{% for report in reports %}
+  <div class="border rounded p-3 mb-3">
+    <div class="small text-muted">{{ report.created_at|date:"d M Y H:i" }} · from {{ report.reporter.username }}</div>
+    <div class="fw-semibold">
+      {{ report.target_kind|capfirst }}:
+      {% if report.entry %}
+        <a href="{{ report.entry.get_absolute_url }}">{{ report.entry.title }}</a>
+      {% else %}
+        {{ report.target }}
+      {% endif %}
+    </div>
+    <div class="mb-2">Reason: {{ report.get_reason_display }}</div>
+
+    {# Each button sends the chosen action to resolve_report. #}
+    <form method="post" action="{% url 'resolve_report' report.id %}" class="d-flex gap-2 flex-wrap">
+      {% csrf_token %}
+      {% if report.entry %}
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'admin:archive_craftentry_change' report.entry.id %}">Edit in admin</a>
+        <button class="btn btn-sm btn-outline-warning" name="action" value="hide">Hide entry</button>
+        <button class="btn btn-sm btn-outline-danger" name="action" value="delete">Delete entry</button>
+      {% elif report.craft_type %}
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'admin:archive_crafttype_change' report.craft_type.id %}">Edit in admin</a>
+      {% elif report.tag %}
+        <button class="btn btn-sm btn-outline-danger" name="action" value="delete">Delete tag</button>
+      {% endif %}
+      <button class="btn btn-sm btn-outline-secondary" name="action" value="dismiss">Dismiss (nothing is wrong)</button>
+    </form>
+  </div>
+{% empty %}
+  <p>No open reports.</p>
+{% endfor %}
+{% endblock %}

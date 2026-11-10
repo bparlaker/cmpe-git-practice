@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Search{% endblock %}
+{% block content %}
+<h1 class="h3">Search and filter</h1>
+
+<form method="get" class="border rounded p-3 mb-4">
+  <div class="row g-2">
+    <div class="col-md-4">{{ form.q.label_tag }} {{ form.q }}</div>
+    {# Changing the craft type reloads the page, so its own filters appear. #}
+    <div class="col-md-4">{{ form.craft_type.label_tag }} {{ form.craft_type }}</div>
+    <div class="col-md-4">{{ form.color.label_tag }} {{ form.color }}</div>
+  </div>
+  {{ form.tag }}
+
+  {% if form.filter_rows %}
+    <div class="row g-2 mt-2">
+      {% for definition, kind, fields in form.filter_rows %}
+        {% if kind == "measurement" %}
+          <div class="col-md-6">
+            <div class="form-label mb-1">{{ definition.name }}</div>
+            <div class="input-group">
+              <span class="input-group-text">from</span>{{ fields.0 }}
+              <span class="input-group-text">to</span>{{ fields.1 }}
+              {{ fields.2 }}
+            </div>
+          </div>
+        {% else %}
+          <div class="col-md-3">{{ fields.0.label_tag }} {{ fields.0 }}</div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="mt-3">
+    <button class="btn btn-primary" type="submit">Search</button>
+    <a class="btn btn-link" href="{% url 'entry_list' %}">Clear</a>
+  </div>
+</form>
+
+{% if form.tag.value %}<p>Entries with the tag <span class="badge text-bg-secondary">{{ form.tag.value }}</span></p>{% endif %}
+
+<p class="text-muted">{{ page.paginator.count }} entr{{ page.paginator.count|pluralize:"y,ies" }} found.</p>
+<div class="row">
+  {% for entry in page %}
+    {% include "archive/_entry_card.html" %}
+  {% empty %}
+    <p>Nothing matches. Try a shorter keyword or remove a filter.</p>
+  {% endfor %}
+</div>
+
+{% if page.has_other_pages %}
+  <nav>
+    <ul class="pagination">
+      {% if page.has_previous %}
+        <li class="page-item"><a class="page-link" href="?{{ query }}&page={{ page.previous_page_number }}">Previous</a></li>
+      {% endif %}
+      <li class="page-item disabled"><span class="page-link">Page {{ page.number }} of {{ page.paginator.num_pages }}</span></li>
+      {% if page.has_next %}
+        <li class="page-item"><a class="page-link" href="?{{ query }}&page={{ page.next_page_number }}">Next</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // When the craft type changes, I send the form right away so the page
+  // can show the filters of that craft type.
+  document.getElementById("id_craft_type").addEventListener("change", function () {
+    this.form.submit();
+  });
+</script>
+{% endblock %}

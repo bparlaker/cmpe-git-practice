@@ -51,7 +51,19 @@
         <div class="choice-list">{{ form.colors }}</div>
       </div>
 
-      {% include "archive/_field.html" with field=form.tags %}
+      {# The tag box: suggestions appear under it while typing (US-06). #}
+      <div class="mb-3">
+        {% include "archive/_field.html" with field=form.tags %}
+        <div id="tag-suggestions" data-url="{% url 'tag_suggestions' %}"></div>
+        {% if form.tags.errors %}
+          <div class="form-check">{{ form.confirm_new_tags }}
+            <label class="form-check-label" for="{{ form.confirm_new_tags.id_for_label }}">{{ form.confirm_new_tags.label }}</label>
+          </div>
+        {% endif %}
+      </div>
+      {% if entry and entry.images.exists %}
+        <p class="small text-muted mb-1">This entry already has {{ entry.images.count }} photo(s). New photos are added to them.</p>
+      {% endif %}
       {% include "archive/_field.html" with field=form.images %}
       {% include "archive/_field.html" with field=form.personal_story %}
     </div>
@@ -71,10 +83,12 @@
   </div>
 
   <button class="btn btn-primary" type="submit">Save entry</button>
+  {% if entry %}<a class="btn btn-link" href="{{ entry.get_absolute_url }}">Cancel</a>{% endif %}
 </form>
 {% endblock %}
 
 {% block scripts %}
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="{% static 'js/map_picker.js' %}"></script>
+  <script src="{% static 'js/tag_suggest.js' %}"></script>
 {% endblock %}

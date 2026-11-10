@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Map{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block content %}
+<h1 class="h3">Map of all entries</h1>
+<p class="text-muted">Click on a pin to open the entry.</p>
+<div id="all-map" class="map-box big-map"></div>
+{# Django writes the list of points as JSON in a safe way with json_script. #}
+{{ points|json_script:"points-data" }}
+{% endblock %}
+{% block scripts %}
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const points = JSON.parse(document.getElementById("points-data").textContent);
+    const allMap = L.map("all-map").setView([39.0, 35.0], 6);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(allMap);
+
+    points.forEach(function (p) {
+      // I build the popup with DOM elements instead of an HTML string, so a
+      // title with special characters cannot break the page.
+      const box = document.createElement("div");
+      const link = document.createElement("a");
+      link.href = p.url;
+      link.textContent = p.title;
+      box.appendChild(link);
+      box.appendChild(document.createElement("br"));
+      box.appendChild(document.createTextNode(p.type));
+      L.marker([p.lat, p.lng]).addTo(allMap).bindPopup(box);
+    });
+  </script>
+{% endblock %}

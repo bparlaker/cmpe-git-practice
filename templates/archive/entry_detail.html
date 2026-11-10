@@ -10,9 +10,21 @@
   <div>
     <h1 class="h3 mb-1">{{ entry.title }}</h1>
     {# Breadcrumb of the three levels: Domain > Family > Craft Type #}
-    <p class="small text-muted">{{ entry.craft_type.path }} · added by {{ entry.owner.username }}</p>
+    <p class="small text-muted">
+      {{ entry.craft_type.path }} · added by <a href="{% url 'profile' entry.owner.username %}">{{ entry.owner.username }}</a>
+    </p>
+    {% if entry.is_hidden %}<div class="alert alert-warning py-1">This entry is hidden by the admin.</div>{% endif %}
   </div>
-  {% block entry_buttons %}{% endblock %}
+  <div>
+    {% if user == entry.owner %}
+      <a class="btn btn-outline-primary btn-sm" href="{% url 'edit_entry' entry.id %}">Edit</a>
+      <a class="btn btn-outline-danger btn-sm" href="{% url 'delete_entry' entry.id %}">Delete</a>
+    {% elif user.is_authenticated %}
+      {# The report goes only to the admin (UC-09). #}
+      <a class="btn btn-outline-secondary btn-sm" href="{% url 'report_content' 'entry' entry.id %}">Report</a>
+    {% endif %}
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'entry_json' entry.id %}">JSON</a>
+  </div>
 </div>
 
 <div class="row">
@@ -54,7 +66,12 @@
 
     {% if entry.tags.exists %}
       <h2 class="h6">Tags</h2>
-      <p>{% for tag in entry.tags.all %}<span class="badge text-bg-secondary me-1">{{ tag.name }}</span>{% endfor %}</p>
+      <p>
+        {# A click on a tag shows all entries with that tag. #}
+        {% for tag in entry.tags.all %}
+          <a class="badge text-bg-secondary text-decoration-none me-1" href="{% url 'entry_list' %}?tag={{ tag.name|urlencode }}">{{ tag.name }}</a>
+        {% endfor %}
+      </p>
     {% endif %}
 
     <h2 class="h6">Production place{% if entry.place_name %}: {{ entry.place_name }}{% endif %}</h2>

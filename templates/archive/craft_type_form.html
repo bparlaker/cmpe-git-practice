@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Define a craft type{% endblock %}
+{% block content %}
+<h1 class="h3">Define a new craft type</h1>
+<p class="text-muted">The fields you define here are the fields everyone fills in for this craft type.
+They are defined once, here, and never added to a single entry.</p>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+  <div class="row">
+    <div class="col-md-6">
+      {% include "archive/_field.html" with field=form.name %}
+      {# Similar names appear here while typing (FR-2.5). #}
+      <div id="similar-types" class="small text-danger mb-2" data-url="{% url 'similar_craft_types' %}"></div>
+      {% if form.name.errors %}
+        <div class="form-check mb-3">{{ form.confirm_new_name }}
+          <label class="form-check-label" for="{{ form.confirm_new_name.id_for_label }}">{{ form.confirm_new_name.label }}</label>
+        </div>
+      {% endif %}
+    </div>
+    <div class="col-md-6">{% include "archive/_field.html" with field=form.category %}</div>
+  </div>
+  {% include "archive/_field.html" with field=form.description %}
+
+  <h2 class="h5 mt-3">Fields of this craft type</h2>
+  <p class="small text-muted">Measurements need a unit (mm, cm, m, g or kg). Choices need their allowed values, one per line.
+  Empty rows are ignored.</p>
+  {{ formset.management_form }}
+  {% for error in formset.non_form_errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+
+  <div class="table-responsive">
+    <table class="table align-top">
+      <thead>
+        <tr><th>Name</th><th>Data type</th><th>Unit</th><th>Allowed values</th><th>Required</th><th>Under photo</th></tr>
+      </thead>
+      <tbody>
+        {% for row in formset %}
+          <tr>
+            {% for field in row.visible_fields %}
+              <td>
+                {{ field }}
+                {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+              </td>
+            {% endfor %}
+            {% for hidden in row.hidden_fields %}{{ hidden }}{% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <button class="btn btn-primary" type="submit">Save craft type</button>
+</form>
+{% endblock %}
+{% block scripts %}
+  <script src="{% static 'js/craft_type_form.js' %}"></script>
+{% endblock %}

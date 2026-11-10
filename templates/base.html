@@ -19,14 +19,20 @@
       </button>
       <div class="collapse navbar-collapse" id="menu">
         <ul class="navbar-nav me-auto">
-          {% block menu_links %}{% endblock %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'browse' %}">Browse</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'entry_list' %}">Search</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'map' %}">Map</a></li>
           {% if user.is_authenticated %}
             <li class="nav-item"><a class="nav-link" href="{% url 'choose_craft_type' %}">Add entry</a></li>
+          {% endif %}
+          {% if user.is_staff %}
+            {# Only the admin sees the reports (FR-7.2). #}
+            <li class="nav-item"><a class="nav-link" href="{% url 'report_queue' %}">Reports</a></li>
           {% endif %}
         </ul>
         <ul class="navbar-nav">
           {% if user.is_authenticated %}
-            <li class="nav-item"><span class="nav-link">Hi, {{ user.username }}</span></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'profile' user.username %}">{{ user.username }}</a></li>
             <li class="nav-item">
               {# Since Django 5 logout must be a POST request, so it is a small form. #}
               <form method="post" action="{% url 'logout' %}">
